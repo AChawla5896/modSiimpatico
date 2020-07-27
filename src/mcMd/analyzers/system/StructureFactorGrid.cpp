@@ -13,6 +13,7 @@
 #include <util/archives/Serializable_includes.h>
 #include <util/format/Int.h>
 #include <util/format/Dbl.h>
+#include <cmath>
 
 namespace McMd
 {
@@ -327,6 +328,7 @@ namespace McMd
             for (int m = 0; m < size; ++m) {
                norm = std::norm(fourierModes_(k, j));
                value = norm/volume;
+               logFile_ << Dbl(value, 20, 8);
                average += value;
                ++k;
             }
@@ -342,7 +344,7 @@ namespace McMd
 
    void StructureFactorGrid::output() 
    {
-      double  value, average, size;
+      double  value, average, size, std_dev, std_err;
       int     i, j, k, m, n;
 
       // Echo parameters to a log file
@@ -383,6 +385,7 @@ namespace McMd
          for (j = 0; j < nMode_; ++j) {
             k = starIds_[i];
             average = 0.0;
+            std_dev = 0.0;
             for (m = 0; m < size; ++m) {
                 value = structureFactors_(k, j)/double(nSample_);
                 average += value;
@@ -390,6 +393,15 @@ namespace McMd
             }
             average = average/double(size);
             outputFile_ << Dbl(average, 20, 8);
+            for (m = 0; m < size; ++m) {
+                value = pow(((structureFactors_(k, j)/double(nSample_))-average),2);
+                std_dev += value;
+                ++k;
+            } 
+            std_dev = std_dev/((double(size)) - 1);
+            std_dev = pow(std_dev, 0.5);
+            std_err = std_dev/pow((double(size)), 0.5);
+            outputFile_ << Dbl(std_err, 20, 8); 
          }
          outputFile_ << std::endl;
 
